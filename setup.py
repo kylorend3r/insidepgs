@@ -5,7 +5,7 @@ with open("README.md", "r", encoding = "utf-8") as fh:
 
 setuptools.setup(
     name = "insidepostgresql",
-    version = "0.0.1",
+    version = "0.0.2",
     author = "Huseyin Demir",
     author_email = "huseyin.d3r@gmail.com",
     description = "Check and analyze a PostgreSQL cluster.",
@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type = "text/markdown",
     url = "https://github.com/adiosamig/insidepgs",
     install_requires=[
-        'psycopg2',
+        'psycopg2-binary',
         'tabulate',
         'datetime'
     ],

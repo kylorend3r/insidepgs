@@ -17,7 +17,8 @@ pip3 install insidepostgresql
 ```
 
 ```python
-db = PostgreSQL("172.17.0.2", "demo", "test123", "test")
+import postgresql
+db = postgresql.PostgreSQL("172.17.0.2", "demo", "test123", "test")
 ```
 
 ```
