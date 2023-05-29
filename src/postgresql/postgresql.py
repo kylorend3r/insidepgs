@@ -137,13 +137,13 @@ class PostgreSQL:
         nobloattableexists_text = "✓" if self.nobloattableexists else "✗"
 
         table_data = [
-            ["Connected To PostgreSQL", connection_text],
-            ["Long Running Query", longrunningquery_text],
-            ["Sum of Active Sessions < 50", sumofactivesessionslessthan50_text],
-            ["Last Analyze/Autovacuum in the Last Week", lastautovacuumoranalyzeinthisweek_text],
-            ["No Bloat Table Exists", nobloattableexists_text],
-            ["No Inactive Replication Slot", inactivereplication_text]
+            ["Connected To PostgreSQL", connection_text,'PostgreSQL connection test.'],
+            ["Long Running Query", longrunningquery_text,'There is no running query older than 1 minute'],
+            ["Sum of Active Sessions < 50", sumofactivesessionslessthan50_text,'Active session count is less than 50'],
+            ["Last Analyze/Autovacuum in the Last Week", lastautovacuumoranalyzeinthisweek_text,'All tables are maintained this week.'],
+            ["No Bloat Table Exists", nobloattableexists_text,'There is no table with bloat ratio greater than 50'],
+            ["No Inactive Replication Slot", inactivereplication_text,'All replication slots are working and active.']
         ]
-        headers = ["Metric", "Value"]
+        headers = ["Issue", "Result","Description"]
         table = tabulate(table_data, headers, tablefmt="grid")
         print(table)
