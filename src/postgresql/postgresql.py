@@ -11,12 +11,21 @@ class PostgreSQL:
         self.database = database
         self.pgsConnection = None
         self.connect()
-        self.inactiveReplicationSlot()
-        self.longrunningQuery()
-        self.activeSessionCount()
-        self.calculateBloat()
-        self.lastAnalyze()
-        self.prepareResults()
+        if self.connectedPostgresql:
+            self.inactiveReplicationSlot()
+            self.longrunningQuery()
+            self.activeSessionCount()
+            self.calculateBloat()
+            self.lastAnalyze()
+            self.prepareResults()
+        else:
+            self.allTablesMaintained=False
+            self.inactivereplication=False
+            self.longrunningquery=False
+            self.sumofactivesessionslessthan50=False
+            self.allTablesMaintained=False
+            self.nobloattableexists=False
+            self.prepareResults()
 
 
     def connect(self):
@@ -28,8 +37,10 @@ class PostgreSQL:
                 database=self.database
             )
             print("Connected to PostgreSQL successfully.")
+            self.connectedPostgresql=True
         except psycopg2.Error as e:
-            print(f"Error connecting to PostgreSQL: {e}")
+            self.connectedPostgresql=False
+
 
     def execute_query(self, query):
         if not self.pgsConnection:
@@ -118,6 +129,7 @@ class PostgreSQL:
         cursor.close()
 
     def prepareResults(self):
+        connection_text= "✓" if self.connectedPostgresql else "✗"
         inactivereplication_text = "✓" if self.inactivereplication else "✗"
         longrunningquery_text = "✓" if self.longrunningquery else "✗"
         sumofactivesessionslessthan50_text = "✓" if self.sumofactivesessionslessthan50 else "✗"
@@ -125,6 +137,7 @@ class PostgreSQL:
         nobloattableexists_text = "✓" if self.nobloattableexists else "✗"
 
         table_data = [
+            ["Connected To PostgreSQL", connection_text],
             ["Long Running Query", longrunningquery_text],
             ["Sum of Active Sessions < 50", sumofactivesessionslessthan50_text],
             ["Last Analyze/Autovacuum in the Last Week", lastautovacuumoranalyzeinthisweek_text],
