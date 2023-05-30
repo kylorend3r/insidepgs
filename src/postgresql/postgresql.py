@@ -1,5 +1,6 @@
 import psycopg2
 import datetime
+import requests
 from tabulate import tabulate
 
 
@@ -10,6 +11,10 @@ class PostgreSQL:
         self.password = password
         self.database = database
         self.pgsConnection = None
+        self.nodeExporterUrl=f'''http://{ip}:9100/metrics'''
+        self.pgsExporterUrl=f'''http://{ip}:9187/metrics'''
+        self.checkNodeExporter()
+        self.checkPostgresqlExporter()
         self.connect()
         if self.connectedPostgresql:
             self.inactiveReplicationSlot()
@@ -128,6 +133,35 @@ class PostgreSQL:
 
         cursor.close()
 
+    def checkNodeExporter(self):
+        try:
+            response = requests.get(self.nodeExporterUrl)
+            result=response.status_code
+            if result==200:
+                self.nodeExporterWorking=True
+                
+            else:
+                self.nodeExporterWorking=False
+        except Exception as nodeExporterException:
+            self.nodeExporterWorking=False
+
+        return True
+    
+
+    def checkPostgresqlExporter(self):
+        try:
+            response = requests.get(self.pgsExporterUrl)
+            result=response.status_code
+            if result==200:
+                self.pgsExporterWorking=True
+                
+            else:
+                self.pgsExporterWorking=False
+        except Exception as nodeExporterException:
+            self.pgsExporterWorking=False
+
+        return True
+
     def prepareResults(self):
         connection_text= "✓" if self.connectedPostgresql else "✗"
         inactivereplication_text = "✓" if self.inactivereplication else "✗"
@@ -135,6 +169,9 @@ class PostgreSQL:
         sumofactivesessionslessthan50_text = "✓" if self.sumofactivesessionslessthan50 else "✗"
         lastautovacuumoranalyzeinthisweek_text = "✓" if self.allTablesMaintained else "✗"
         nobloattableexists_text = "✓" if self.nobloattableexists else "✗"
+        exporterworking = "✓" if self.nodeExporterWorking else "✗"
+        pgsexporterworking = "✓" if self.pgsExporterWorking else "✗"
+        print(exporterworking)
 
         table_data = [
             ["Connected To PostgreSQL", connection_text,'PostgreSQL connection test.'],
@@ -142,7 +179,9 @@ class PostgreSQL:
             ["Sum of Active Sessions < 50", sumofactivesessionslessthan50_text,'Active session count is less than 50'],
             ["Last Analyze/Autovacuum in the Last Week", lastautovacuumoranalyzeinthisweek_text,'All tables are maintained this week.'],
             ["No Bloat Table Exists", nobloattableexists_text,'There is no table with bloat ratio greater than 50'],
-            ["No Inactive Replication Slot", inactivereplication_text,'All replication slots are working and active.']
+            ["No Inactive Replication Slot", inactivereplication_text,'All replication slots are working and active.'],
+            ["Node Exporter Working", exporterworking,'Node exporter are working and running'],
+            ["PostgreSQL Exporter Working", pgsexporterworking,'PostgreSQL exporter are working and running']
         ]
         headers = ["Issue", "Result","Description"]
         table = tabulate(table_data, headers, tablefmt="grid")
