@@ -37,6 +37,10 @@ db = postgresql.PostgreSQL("172.17.0.2", "demo", "test123", "test")
 +------------------------------------------+----------+----------------------------------------------------+
 | No Inactive Replication Slot             | ✓        | All replication slots are working and active.      |
 +------------------------------------------+----------+----------------------------------------------------+
+| Node Exporter Working                    | ✓        | Node exporter are working and running              |
++------------------------------------------+----------+----------------------------------------------------+
+| PostgreSQL Exporter Working              | ✗        | PostgreSQL exporter are working and running        |
++------------------------------------------+----------+----------------------------------------------------+
 ```
 
 # Contributing
