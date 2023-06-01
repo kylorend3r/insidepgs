@@ -1,6 +1,7 @@
 import psycopg2
 import datetime
 import requests
+import time
 from tabulate import tabulate
 
 
@@ -22,6 +23,7 @@ class PostgreSQL:
             self.activeSessionCount()
             self.calculateBloat()
             self.lastAnalyze()
+            self.checkDatabaseLocks()
             self.prepareResults()
         else:
             self.allTablesMaintained=False
@@ -30,6 +32,7 @@ class PostgreSQL:
             self.sumofactivesessionslessthan50=False
             self.allTablesMaintained=False
             self.nobloattableexists=False
+            self.noSeriousLocking=False
             self.prepareResults()
 
 
@@ -94,6 +97,28 @@ class PostgreSQL:
         result = self.execute_query(query)
         self.nobloattableexists = all(row[2] <= 50 for row in result)
 
+    def checkDatabaseLocks(self):
+        # it is not the best way to analyze locking in postgresql. But will be improved.
+        importantLockTypes=['RowExclusiveLock','ShareUpdateExclusiveLock','ShareLock','AccessExclusiveLock']
+        realAverageCount=0
+        for i in range(3):
+            averageCount=0
+            lockingQery=f'''SELECT locktype, relation::regclass, mode, transactionid AS tid,
+                            virtualtransaction AS vtid, pid, granted FROM pg_catalog.pg_locks l LEFT JOIN pg_catalog.pg_database db
+                            ON db.oid = l.database WHERE (db.datname = '{self.database}')
+                            AND NOT pid = pg_backend_pid();'''
+            lockingResult=self.execute_query(lockingQery)
+            for lockType in lockingResult:
+                lockTypeController=lockType[2]
+                if lockTypeController in importantLockTypes:
+                    averageCount=averageCount+1
+            realAverageCount=realAverageCount+averageCount
+            time.sleep(5)
+        realAverageCount=int(realAverageCount/3)
+        if realAverageCount > 10:
+            self.noSeriousLocking=False
+        else:
+            self.noSeriousLocking=True
     def lastAnalyze(self):
         cursor = self.pgsConnection.cursor()
 
@@ -171,12 +196,14 @@ class PostgreSQL:
         nobloattableexists_text = "✓" if self.nobloattableexists else "✗"
         exporterworking = "✓" if self.nodeExporterWorking else "✗"
         pgsexporterworking = "✓" if self.pgsExporterWorking else "✗"
-        print(exporterworking)
+        pgslocking = "✓" if self.noSeriousLocking else "✗"
+
 
         table_data = [
             ["Connected To PostgreSQL", connection_text,'PostgreSQL connection test.'],
             ["Long Running Query", longrunningquery_text,'There is no running query older than 1 minute'],
             ["Sum of Active Sessions < 50", sumofactivesessionslessthan50_text,'Active session count is less than 50'],
+            ["Average Important Lock Count < 10", pgslocking,'Average of RowExclusiveLock,ShareUpdateExclusiveLock,ShareLock,AccessExclusiveLock is less than 10'],
             ["Last Analyze/Autovacuum in the Last Week", lastautovacuumoranalyzeinthisweek_text,'All tables are maintained this week.'],
             ["No Bloat Table Exists", nobloattableexists_text,'There is no table with bloat ratio greater than 50'],
             ["No Inactive Replication Slot", inactivereplication_text,'All replication slots are working and active.'],
