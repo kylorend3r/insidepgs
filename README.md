@@ -8,6 +8,8 @@ This Python package provides functionality to interact with a PostgreSQL databas
 - Counting active sessions
 - Calculating table bloat ratio
 - Checking the last analyze and autovacuum dates for tables
+- Checking node and postgresql exporter endpoints
+- Checking average lock count on database
 
 
 # Getting Started
