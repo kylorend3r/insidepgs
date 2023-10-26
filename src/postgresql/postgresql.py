@@ -20,6 +20,7 @@ class PostgreSQL:
         if self.connectedPostgresql:
             self.inactiveReplicationSlot()
             self.longrunningQuery()
+            self.archiverProcessState()
             self.activeSessionCount()
             self.calculateBloat()
             self.lastAnalyze()
@@ -119,6 +120,15 @@ class PostgreSQL:
             self.noSeriousLocking=False
         else:
             self.noSeriousLocking=True
+
+    def archiverProcessState(self):
+        query = """
+        select last_archived_time, last_failed_time 
+        from pg_stat_archiver 
+        where last_failed_time > last_archived_time;
+        """
+        result = self.execute_query(query)
+        self.archiverProcess = False if result else True
     def lastAnalyze(self):
         cursor = self.pgsConnection.cursor()
 
@@ -197,6 +207,7 @@ class PostgreSQL:
         exporterworking = "✓" if self.nodeExporterWorking else "✗"
         pgsexporterworking = "✓" if self.pgsExporterWorking else "✗"
         pgslocking = "✓" if self.noSeriousLocking else "✗"
+        archiver_process = "✓" if self.archiverProcess else "✗"
 
 
         table_data = [
@@ -208,7 +219,8 @@ class PostgreSQL:
             ["No Bloat Table Exists", nobloattableexists_text,'There is no table with bloat ratio greater than 50'],
             ["No Inactive Replication Slot", inactivereplication_text,'All replication slots are working and active.'],
             ["Node Exporter Working", exporterworking,'Node exporter are working and running'],
-            ["PostgreSQL Exporter Working", pgsexporterworking,'PostgreSQL exporter are working and running']
+            ["PostgreSQL Exporter Working", pgsexporterworking,'PostgreSQL exporter are working and running'],
+            ["Archiver Process",archiver_process,'Archiver process is working']
         ]
         headers = ["Issue", "Result","Description"]
         table = tabulate(table_data, headers, tablefmt="grid")
