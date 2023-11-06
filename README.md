@@ -10,7 +10,7 @@ This Python package provides functionality to interact with a PostgreSQL databas
 - Checking the last analyze and autovacuum dates for tables
 - Checking node and postgresql exporter endpoints
 - Checking average lock count on database
-
+- Checking archiver process failure.
 
 # Getting Started
 
@@ -45,7 +45,9 @@ db = postgresql.PostgreSQL("172.17.0.2", "demo", "test123", "test")
 +------------------------------------------+----------+----------------------------------------------------------------------------------------------------+
 | PostgreSQL Exporter Working              | ✗        | PostgreSQL exporter are working and running                                                        |
 +------------------------------------------+----------+----------------------------------------------------------------------------------------------------+
-```
+| Archiver Process                         | ✓        | Archiver process is working.                                                                       |
++------------------------------------------+----------+----------------------------------------------------------------------------------------------------+
+
 
 # Contributing
 
